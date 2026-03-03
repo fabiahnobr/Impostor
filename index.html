@@ -270,7 +270,15 @@
   }
 
   function launchGame() {
-    impostorIndex = Math.floor(Math.random() * players.length);
+    let lastImpostorIndex = -1;
+
+  function launchGame() {
+    let newImpostor;
+    do {
+      newImpostor = Math.floor(Math.random() * players.length);
+    } while (newImpostor === lastImpostorIndex && players.length > 1);
+    impostorIndex = newImpostor;
+    lastImpostorIndex = impostorIndex;
     alivePlayers = players.map((name, i) => ({ name, originalIndex: i }));
     currentTurn = 0;
     buildDots(); showTurn(); goTo('screen-reveal');
