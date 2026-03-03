@@ -4,16 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impostor</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a0a0f">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Impostor">
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/Impostor/sw.js");
-  }
-</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { min-height: 100vh; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0f 70%); }
@@ -270,15 +260,7 @@
   }
 
   function launchGame() {
-    let lastImpostorIndex = -1;
-
-  function launchGame() {
-    let newImpostor;
-    do {
-      newImpostor = Math.floor(Math.random() * players.length);
-    } while (newImpostor === lastImpostorIndex && players.length > 1);
-    impostorIndex = newImpostor;
-    lastImpostorIndex = impostorIndex;
+    impostorIndex = Math.floor(Math.random() * players.length);
     alivePlayers = players.map((name, i) => ({ name, originalIndex: i }));
     currentTurn = 0;
     buildDots(); showTurn(); goTo('screen-reveal');
@@ -392,13 +374,6 @@
       renderVoteGrid(); goTo('screen-vote');
     }
   }
-  // Pantalla completa al primer toque
-  document.addEventListener('click', function enterFS() {
-    const el = document.documentElement;
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    document.removeEventListener('click', enterFS);
-  });
 </script>
 </body>
 </html>
