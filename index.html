@@ -384,6 +384,13 @@
       renderVoteGrid(); goTo('screen-vote');
     }
   }
+  // Pantalla completa al primer toque
+  document.addEventListener('click', function enterFS() {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    document.removeEventListener('click', enterFS);
+  });
 </script>
 </body>
 </html>
