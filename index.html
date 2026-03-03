@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impostor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { min-height: 100vh; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0f 70%); }
+  .screen { display: none; width: 100%; max-width: 480px; padding: 20px; animation: fadeIn 0.4s ease; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  h1.main-title { font-size: 72px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; background: linear-gradient(135deg,#ff4757,#ff6b81,#ff4757); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 30px rgba(255,71,87,.6)); text-align: center; }
+  .subtitle { color: #aaa; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; text-align: center; }
+  .among-icon { font-size: 80px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(255,71,87,.4)); }
+  .card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 28px; width: 100%; backdrop-filter: blur(10px); }
+  .card h2 { font-size: 20px; margin-bottom: 18px; color: #ff6b81; text-align: center; }
+  input[type="text"] { width: 100%; padding: 14px 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; color: #fff; font-size: 16px; outline: none; transition: border-color .3s; }
+  input[type="text"]:focus { border-color: #ff4757; }
+  input[type="text"]::placeholder { color: #666; }
+  .input-row { display: flex; gap: 10px; width: 100%; }
+  .input-row input { flex: 1; }
+  .btn { padding: 14px 32px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: 1px; text-transform: uppercase; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg,#ff4757,#c0392b); color: #fff; box-shadow: 0 4px 20px rgba(255,71,87,.4); width: 100%; }
+  .btn-secondary { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+  .btn-add { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: #fff; padding: 14px 20px; box-shadow: 0 4px 15px rgba(108,92,231,.4); flex-shrink: 0; }
+  .btn-green { background: linear-gradient(135deg,#00b894,#00cec9); color: #fff; box-shadow: 0 4px 20px rgba(0,184,148,.4); width: 100%; }
+  .btn-gen { background: linear-gradient(135deg,#fd79a8,#e84393); color: #fff; box-shadow: 0 4px 20px rgba(232,67,147,.4); width: 100%; border: none; border-radius: 14px; padding: 14px 32px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: 1px; text-transform: uppercase; }
+  .btn-gen:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(232,67,147,.5); }
+  .btn-gen:active { transform: scale(.97); }
+  .btn-futbol { background: linear-gradient(135deg,#00b894,#00a86b); color: #fff; box-shadow: 0 4px 20px rgba(0,184,148,.4); width: 100%; border: none; border-radius: 14px; padding: 14px 32px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: 1px; text-transform: uppercase; }
+  .btn-futbol:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,184,148,.5); }
+  .btn-futbol:active { transform: scale(.97); }
+  .players-list { display: flex; flex-direction: column; gap: 8px; width: 100%; max-height: 200px; overflow-y: auto; margin-top: 14px; }
+  .player-tag { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(255,255,255,.07); border-radius: 10px; border-left: 3px solid #6c5ce7; animation: slideIn .3s ease; }
+  .remove-btn { background: none; border: none; color: #ff4757; cursor: pointer; font-size: 18px; padding: 0 4px; }
+  .reveal-card { background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); border-radius: 24px; padding: 40px 28px; width: 100%; text-align: center; }
+  .player-name-big { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .turn-label { font-size: 13px; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+  .word-reveal { display: none; margin: 20px 0; }
+  .word-box { padding: 24px; border-radius: 16px; font-size: 28px; font-weight: 900; letter-spacing: 1px; animation: pop .4s cubic-bezier(.175,.885,.32,1.275); }
+  .word-box.citizen { background: rgba(0,184,148,.15); border: 2px solid #00b894; color: #00b894; }
+  .word-box.impostor-word { background: rgba(255,71,87,.15); border: 2px solid #ff4757; color: #ff4757; text-shadow: 0 0 20px rgba(255,71,87,.5); }
+  .vote-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 12px; width: 100%; }
+  .vote-btn { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); border-radius: 14px; color: #fff; padding: 18px 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .vote-btn:hover { background: rgba(255,71,87,.2); border-color: #ff4757; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,71,87,.2); }
+  .vote-icon { font-size: 28px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #1a1a2e; border: 1px solid rgba(255,255,255,.15); border-radius: 24px; padding: 32px; max-width: 360px; width: 100%; text-align: center; animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+  .modal h3 { font-size: 20px; margin-bottom: 10px; }
+  .modal p { color: #aaa; margin-bottom: 24px; font-size: 15px; }
+  .modal-btns { display: flex; gap: 12px; }
+  .modal-btns .btn { flex: 1; padding: 12px; }
+  .result-big { font-size: 60px; margin: 10px 0; animation: float 2s ease-in-out infinite; }
+  .result-text { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .result-sub { color: #aaa; font-size: 14px; margin-bottom: 20px; }
+  .progress-dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.2); transition: background .3s; }
+  .dot.done { background: #6c5ce7; }
+  .dot.current { background: #ff4757; }
+  .alive-count { color: #aaa; font-size: 13px; letter-spacing: 1px; }
+  .mode-buttons { display: flex; gap: 12px; width: 100%; }
+  .mode-buttons .btn-gen,
+  .mode-buttons .btn-futbol { flex: 1; padding: 14px 10px; font-size: 14px; }
+  .starter-name { font-size: 38px; font-weight: 900; color: #ff6b81; margin: 16px 0; animation: pop .5s cubic-bezier(.175,.885,.32,1.275); }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA PRINCIPAL -->
+<div class="screen active" id="screen-home">
+  <div class="among-icon">🔴</div>
+  <h1 class="main-title">Impostor</h1>
+  <p class="subtitle">¿Quién es el impostor?</p>
+  <button class="btn btn-primary" onclick="goTo('screen-players')" style="margin-top:10px">🚀 Iniciar Juego</button>
+</div>
+
+<!-- AGREGAR JUGADORES -->
+<div class="screen" id="screen-players">
+  <h1 class="main-title" style="font-size:40px">Jugadores</h1>
+  <div class="card">
+    <h2>👥 Agregar Jugadores</h2>
+    <div class="input-row">
+      <input type="text" id="player-input" placeholder="Nombre del jugador..." onkeydown="if(event.key==='Enter')addPlayer()">
+      <button class="btn btn-add" onclick="addPlayer()">+</button>
+    </div>
+    <div class="players-list" id="players-list"></div>
+  </div>
+  <button class="btn btn-primary" onclick="goToWord()">Continuar →</button>
+  <div class="mode-buttons">
+    <button class="btn-gen" onclick="activateModeLibrary('gen')">✨ Modo Gen</button>
+    <button class="btn-futbol" onclick="activateModeLibrary('futbol')">⚽ Modo Fútbol</button>
+  </div>
+  <button class="btn btn-secondary" onclick="goTo('screen-home')">← Volver</button>
+</div>
+
+<!-- PALABRA SECRETA -->
+<div class="screen" id="screen-word">
+  <h1 class="main-title" style="font-size:40px">Palabra</h1>
+  <div class="card">
+    <h2>🔤 Palabra Secreta</h2>
+    <p style="color:#aaa;font-size:14px;text-align:center;margin-bottom:16px">Todos la verán... excepto el impostor</p>
+    <input type="text" id="word-input" placeholder="Escribe la palabra..." style="font-size:18px;text-align:center">
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">🎮 Comenzar</button>
+  <button class="btn btn-secondary" onclick="goTo('screen-players')">← Volver</button>
+</div>
+
+<!-- REVELAR TURNO -->
+<div class="screen" id="screen-reveal">
+  <div class="progress-dots" id="progress-dots"></div>
+  <div class="reveal-card">
+    <div class="turn-label">Turno de</div>
+    <div class="player-name-big" id="current-player-name"></div>
+    <div class="word-reveal" id="word-reveal">
+      <div class="word-box" id="word-box"></div>
+    </div>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" id="reveal-btn" onclick="revealWord()">👁 Revelar</button>
+    <button class="btn btn-green" id="next-btn" onclick="nextPlayer()" style="display:none;margin-top:12px">Siguiente →</button>
+  </div>
+</div>
+
+<!-- PANTALLA QUIÉN EMPIEZA -->
+<div class="screen" id="screen-firstplayer">
+  <div style="font-size:70px;animation:float 2s ease-in-out infinite">🎲</div>
+  <h1 class="main-title" style="font-size:36px">¡A hablar!</h1>
+  <div class="reveal-card" style="text-align:center">
+    <div class="turn-label">El azar eligió a</div>
+    <div class="starter-name" id="first-player-name"></div>
+    <p style="color:#aaa;font-size:14px;margin-bottom:24px">para empezar a hablar</p>
+    <button class="btn btn-primary" onclick="startVoting()">¡Listo! Votar →</button>
+  </div>
+</div>
+
+<!-- VOTACIÓN -->
+<div class="screen" id="screen-vote">
+  <h1 class="main-title" style="font-size:36px">¡Voten!</h1>
+  <p class="subtitle">¿Quién es el impostor?</p>
+  <div class="alive-count" id="alive-count"></div>
+  <div class="vote-grid" id="vote-grid"></div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <div style="font-size:40px;margin-bottom:12px">🤔</div>
+    <h3>¿Estás seguro?</h3>
+    <p>Vas a votar a <strong id="voted-name"></strong> como el impostor</p>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmVote()">¡Sí, votar!</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESULTADO -->
+<div class="modal-overlay" id="modal-result">
+  <div class="modal">
+    <div class="result-big" id="result-emoji"></div>
+    <div class="result-text" id="result-text"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <button class="btn btn-primary" id="result-btn" onclick="handleResult()"></button>
+  </div>
+</div>
+
+<script>
+  const LIBRARIES = {
+    gen: [
+      "Harold","Mariana Sanchez","Nicole","Alberth","Alessandro","Alexei","AnaSo",
+      "Anna Elena","Arguedas","Dario","Diego Rodriguez","Dorian","Zamora","Coco",
+      "Fabiola","Lesbi","Negro","Carranza","Isabella","Esteban","Jimena","Joshua",
+      "Jon","Pablo","Josue","Juanita","Madison","Marco","Mariana Fonseca","Martin",
+      "Mariel","Paz Viquez","Paz Soto","Marmot","Mati G","Matits","Capi","Memo",
+      "Montse","Murillo","Maykol","Ronald","Samu","Pinguin","Pio","Ester","Santiago",
+      "Sofia Arce","Suarez","Stacy","Tony","Tracy","Valeria G","Valeria M","Valeota",
+      "Venegas","Ximena","Yariela","Adri","Abigail","Amanda Muñoz","Amanda Artavia",
+      "Pepe","Diego Pork","Astorga","Genesis","Angie","Jasmine","Keila","Kim",
+      "Marilu","Michelle","Moises","Nicko","Paula","Sofia Alfaro","Soto","Walter"
+    ],
+    futbol: [
+      "Ronaldinho","Ronaldo Nazário","Zinedine Zidane","David Beckham","Wayne Rooney",
+      "Zlatan Ibrahimović","Thierry Henry","Dennis Bergkamp","Paolo Maldini","Andrea Pirlo",
+      "Gianluigi Buffon","Iker Casillas","Oliver Kahn","Cafu","Roberto Carlos","Rivaldo",
+      "Kaká","Ronald Koeman","Ruud Gullit","Marco van Basten","Johan Cruyff","Pelé",
+      "Diego Maradona","George Best","Eusébio","Franz Beckenbauer","Gerd Müller",
+      "Philipp Lahm","Bastian Schweinsteiger","Sergio Agüero","Carlos Tevez","Arturo Vidal",
+      "Diego Forlán","Park Ji-sung","Didier Drogba","Samuel Eto'o","Yaya Touré",
+      "Xavi Hernández","Andrés Iniesta","Gerard Piqué","Michel Platini","Roberto Baggio",
+      "Franco Baresi","Lev Yashin","Ferenc Puskás","Romário","Hristo Stoichkov","Bobby Charlton",
+      "Lionel Messi","Cristiano Ronaldo","Neymar Jr","Kylian Mbappé","Erling Haaland",
+      "Kevin De Bruyne","Luka Modrić","Toni Kroos","Karim Benzema","Robert Lewandowski",
+      "Mohamed Salah","Sadio Mané","Virgil van Dijk","Sergio Ramos","Manuel Neuer",
+      "Marcelo Vieira","Dani Alves","Thomas Müller","Mesut Özil","Ángel Di María",
+      "Paulo Dybala","Lautaro Martínez","Alexis Sánchez","James Rodríguez","Radamel Falcao",
+      "Luis Suárez","Edinson Cavani","Son Heung-min","Riyad Mahrez","N'Golo Kanté",
+      "Paul Pogba","Antoine Griezmann","Karim Adeyemi","Jude Bellingham","Pedri",
+      "Vinícius Jr","Rodri","Bernardo Silva","Phil Foden","Bukayo Saka","Jamal Musiala",
+      "Florian Wirtz","Victor Osimhen","Khvicha Kvaratskhelia","Achraf Hakimi","Theo Hernández",
+      "Alphonso Davies","Declan Rice","Martin Ødegaard","Federico Valverde","Gavi",
+      "Aurélien Tchouaméni","Eduardo Camavinga","Julián Álvarez","Harry Kane","Rafael Leão",
+      "Leroy Sané","Kingsley Coman","Ousmane Dembélé","Nicolò Barella","Alessandro Bastoni",
+      "Mike Maignan","Thibaut Courtois","Jan Oblak","Frenkie de Jong"
+    ]
+  };
+
+  let players = [];
+  let alivePlayers = [];
+  let secretWord = '';
+  let impostorIndex = -1;
+  let currentTurn = 0;
+  let pendingVote = -1;
+
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function addPlayer() {
+    const input = document.getElementById('player-input'), name = input.value.trim();
+    if (!name) return;
+    if (players.includes(name)) { alert('Ese nombre ya existe'); return; }
+    players.push(name); input.value = ''; renderPlayers(); input.focus();
+  }
+
+  function renderPlayers() {
+    const list = document.getElementById('players-list'); list.innerHTML = '';
+    players.forEach((p, i) => {
+      const d = document.createElement('div'); d.className = 'player-tag';
+      d.innerHTML = `<span>👤 ${p}</span><button class="remove-btn" onclick="removePlayer(${i})">✕</button>`;
+      list.appendChild(d);
+    });
+  }
+
+  function removePlayer(i) { players.splice(i, 1); renderPlayers(); }
+
+  function goToWord() {
+    if (players.length < 3) { alert('Agrega al menos 3 jugadores'); return; }
+    goTo('screen-word');
+  }
+
+  function activateModeLibrary(mode) {
+    if (players.length < 3) { alert('Agrega al menos 3 jugadores'); return; }
+    const lib = LIBRARIES[mode];
+    secretWord = lib[Math.floor(Math.random() * lib.length)];
+    launchGame();
+  }
+
+  function startGame() {
+    secretWord = document.getElementById('word-input').value.trim();
+    if (!secretWord) { alert('Escribe una palabra'); return; }
+    launchGame();
+  }
+
+  function launchGame() {
+    impostorIndex = Math.floor(Math.random() * players.length);
+    alivePlayers = players.map((name, i) => ({ name, originalIndex: i }));
+    currentTurn = 0;
+    buildDots(); showTurn(); goTo('screen-reveal');
+  }
+
+  function buildDots() {
+    const dots = document.getElementById('progress-dots'); dots.innerHTML = '';
+    players.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' current' : '');
+      d.id = 'dot-' + i; dots.appendChild(d);
+    });
+  }
+
+  function showTurn() {
+    document.getElementById('current-player-name').textContent = players[currentTurn];
+    document.getElementById('word-reveal').style.display = 'none';
+    document.getElementById('reveal-btn').style.display = 'block';
+    document.getElementById('next-btn').style.display = 'none';
+    players.forEach((_, i) => {
+      const d = document.getElementById('dot-' + i);
+      if (d) d.className = 'dot' + (i < currentTurn ? ' done' : i === currentTurn ? ' current' : '');
+    });
+  }
+
+  function revealWord() {
+    const isI = currentTurn === impostorIndex, box = document.getElementById('word-box');
+    box.textContent = isI ? '🔪 IMPOSTOR' : secretWord.toUpperCase();
+    box.className = 'word-box ' + (isI ? 'impostor-word' : 'citizen');
+    document.getElementById('word-reveal').style.display = 'block';
+    document.getElementById('reveal-btn').style.display = 'none';
+    const n = document.getElementById('next-btn'); n.style.display = 'block';
+    n.textContent = currentTurn < players.length - 1 ? 'Siguiente →' : '🎲 Ver quién empieza';
+  }
+
+  function nextPlayer() {
+    currentTurn++;
+    if (currentTurn >= players.length) {
+      // Todos vieron su palabra — elegir quién empieza a hablar
+      const starter = Math.floor(Math.random() * players.length);
+      document.getElementById('first-player-name').textContent = players[starter];
+      goTo('screen-firstplayer');
+    } else {
+      showTurn();
+    }
+  }
+
+  function startVoting() { renderVoteGrid(); goTo('screen-vote'); }
+
+  function renderVoteGrid() {
+    const grid = document.getElementById('vote-grid'); grid.innerHTML = '';
+    document.getElementById('alive-count').textContent = `👥 Jugadores vivos: ${alivePlayers.length}`;
+    alivePlayers.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.className = 'vote-btn';
+      b.innerHTML = `<span class="vote-icon">👤</span>${p.name}`;
+      b.onclick = () => openVoteModal(i);
+      grid.appendChild(b);
+    });
+  }
+
+  function openVoteModal(i) {
+    pendingVote = i;
+    document.getElementById('voted-name').textContent = alivePlayers[i].name;
+    document.getElementById('modal-confirm').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-confirm').classList.remove('active');
+    pendingVote = -1;
+  }
+
+  function confirmVote() {
+    document.getElementById('modal-confirm').classList.remove('active');
+    const voted = alivePlayers[pendingVote];
+    const isI = voted.originalIndex === impostorIndex;
+
+    if (isI) {
+      showResult('🎉', '¡Era el IMPOSTOR!', `${voted.name} era el impostor. ¡Los ciudadanos ganan!`, 'home', 'btn-primary');
+    } else {
+      alivePlayers.splice(pendingVote, 1);
+      const impostorStillAlive = alivePlayers.some(p => p.originalIndex === impostorIndex);
+      if (impostorStillAlive && alivePlayers.length <= 2) {
+        showResult('😈', '¡Ganó el IMPOSTOR!', `${voted.name} era inocente. Solo quedan ${alivePlayers.length} jugadores y el impostor sigue libre. ¡El impostor gana!`, 'home', 'btn-primary');
+      } else {
+        showResult('😅', 'Era ciudadano...', `${voted.name} era inocente y fue eliminado. El impostor sigue entre ustedes.`, 'continue', 'btn-green');
+      }
+    }
+
+    document.getElementById('modal-result').classList.add('active');
+  }
+
+  function showResult(emoji, title, sub, action, btnClass) {
+    document.getElementById('result-emoji').textContent = emoji;
+    document.getElementById('result-text').textContent = title;
+    document.getElementById('result-sub').textContent = sub;
+    const btn = document.getElementById('result-btn');
+    btn.textContent = action === 'home' ? '🏠 Menú Principal' : '🔄 Seguir Votando';
+    btn.className = 'btn ' + btnClass;
+    btn.dataset.action = action;
+  }
+
+  function handleResult() {
+    const action = document.getElementById('result-btn').dataset.action;
+    document.getElementById('modal-result').classList.remove('active');
+    if (action === 'home') {
+      secretWord = ''; impostorIndex = -1;
+      document.getElementById('word-input').value = '';
+      goTo('screen-players');
+    } else {
+      renderVoteGrid(); goTo('screen-vote');
+    }
+  }
+</script>
+</body>
+</html>
